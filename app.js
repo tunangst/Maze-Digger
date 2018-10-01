@@ -22,45 +22,53 @@ const ctx = canvas.getContext('2d');
 canvas.width = size * column;
 canvas.height = size * row;
 
+let fpsInterval;
+let startTime;
+let now;
+let then;
+let elapsed;
+let run;
+////////////////////////////////////////digging animation frames///////////////
+const doIt = () => {
+  next = current.checkNeighbors();
+  removeWalls();
+  if (next) {
+    if (next === max) {
+      next.end = true;
+    }
+    visitedCount++;
+    next.visited = true;
+    current = next;
+    startBuild();
+    stack.push(current);
+  } else if (stack.length > 0) {
+    current = stack.pop();
+    startBuild();
+  }
+}
+function animate() {
+  run = requestAnimationFrame(animate);
+  now = Date.now();
+  elapsed = now - then;
+  if (elapsed > fpsInterval) {
+    then = now - (elapsed % fpsInterval);
+    doIt();
+  }
+}
+
+function startAnimating(fps) {
+  fpsInterval = 1000 / fps;
+  then = Date.now();
+  startTime = then;
+  animate();
+}
 /////////////////////////////////dig//////////////////////////////
 function dig() {
   start();
-  let fpsInterval;
-  let startTime;
-  let now;
-  let then;
-  let elapsed;
-  function startAnimating(fps) {
-    fpsInterval = 1000 / fps;
-    then = Date.now();
-    startTime = then;
-    animate();
-  }
-  function animate() {
-    requestAnimationFrame(animate);
-    now = Date.now();
-    elapsed = now - then;
-    if (elapsed > fpsInterval) {
-      then = now - (elapsed % fpsInterval);
-      doIt();
-    }
-  }
-  doIt = () => {
-    next = current.checkNeighbors();
-    removeWalls();
-    if (next) {
-      if (next === max) {
-        next.end = true;
-      }
-      visitedCount++;
-      next.visited = true;
-      current = next;
-      startBuild();
-      stack.push(current);
-    } else if (stack.length > 0) {
-      current = stack.pop();
-      startBuild();
-    }
+  current = board[0][0];
+  if (run) {
+    cancelAnimationFrame(run);
+    run = null;
   }
   if (!current) {
     current = board[0][0];
