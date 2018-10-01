@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css?family=Rajdhani:500,600,700" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+
+    <title>Document</title>
+</head>
+<body>
+    <main>
+        <h1>The Maze Digger!</h1>
+        <form action="./app.js" method='POST'>
+          <ul>
+            <li>
+              <p>Block Size  <br>
+                <input id='size' type="number" name='blockSize' value='10'>
+              </p>
+            </li>
+            <li>
+              <p>Block Columns <br>
+                <input id='columns' type="number" name='blockColumn' value='40'>
+              </p>
+            </li>
+            <li>
+              <p>Block Rows <br>
+                <input id='rows' type="number" name='blockRow' value='40'>
+              </p>
+            </li>
+            <li>
+              <p>Speed < 100<br>
+                <input id='speed' type="number" name='speed' value='50' min = '1' max='100'>
+              </p>
+            </li>
+            <li>
+              <p>Supports  Girth <br>
+                <input id='border' type="number" name='borderGirth' value='2'>
+              </p>
+            </li>
+            <li>
+              <input id='dig' type="button" value='Dig!!'>
+            </li>
+            <li>
+              <input id='play' type="button" onclick='play()' value='Play!!'>
+            </li>
+          </ul>
+        </form>
+        <canvas></canvas>
+    </main>
+
+
+    <script type='text/javascript' src='./app.js'></script>
+</body>
+</html>
