@@ -5,7 +5,7 @@ let board = [];
 let stack = [];
 let played = [];
 let max;
-// let maxAnimation;
+
 let border;
 let current;
 let next;
@@ -17,6 +17,10 @@ let fps = 10;
 let keyName;
 let keyDirection;
 
+let nowPlaying = false;
+let digButton;
+let playButton;
+let waitButton;
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 canvas.width = size * column;
@@ -28,6 +32,7 @@ let now;
 let then;
 let elapsed;
 let run;
+
 ////////////////////////////////////////digging animation frames///////////////
 const doIt = () => {
   next = current.checkNeighbors();
@@ -52,6 +57,7 @@ function animate() {
   elapsed = now - then;
   if (elapsed > fpsInterval) {
     then = now - (elapsed % fpsInterval);
+    wait.value = `${visitedCount + 1} / ${row * column}`
     doIt();
   }
 }
@@ -62,9 +68,42 @@ function startAnimating(fps) {
   startTime = then;
   animate();
 }
+////////////////////////////////////////fadeOut///////////////////////////////
+function fadeOut(element) {
+  var op = 1; // initial opacity
+  // element.style.display = 'absolute';
+  var timer = setInterval(function () {
+    if (op <= 0.1) {
+      clearInterval(timer);
+      element.style.display = 'none';
+    }
+    element.style.opacity = op;
+    element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+    op -= op * 0.1;
+  }, 10);
+}
+
+function fadeIn(element) {
+  var op = .1; // initial opacity
+  element.style.display = 'inline-block';
+  var timer = setInterval(function () {
+    if (op >= 1) {
+      clearInterval(timer);
+    }
+    element.style.opacity = op;
+    element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+    op += op * 0.1;
+  }, 10);
+}
+
 /////////////////////////////////dig//////////////////////////////
 function dig() {
+  // fadeOut(playBox);
+  playBox.style.display = 'none'
+  fadeIn(waitBox);
+  waitBox.style.display = 'inline-block';
   start();
+  stack = [];
   current = board[0][0];
   if (run) {
     cancelAnimationFrame(run);
@@ -79,6 +118,7 @@ function dig() {
   current.visited = true;
   startAnimating(fps);
 }
+
 ///////////////////////////////setup//////////////////////////////
 const setup = () => {
   for (let rowIndex = 0; rowIndex < row; rowIndex++) {
@@ -206,7 +246,7 @@ let cell = {
       ctx.stroke();
     }
 
-  },
+  }
 }
 
 //////////////////////////////startbuild//////////////////////////
@@ -248,14 +288,19 @@ const removeWalls = () => {
 }
 const win = () => {
   if (current === max) {
+    nowPlaying = false;
+    playButton.value = 'Play!!'
+    fadeOut(playBox);
     console.log('you win!');
     played.forEach(function (cell) {
       cell.end = true;
-    })
+    });
   }
 }
 ////////////////////////////////play//////////////////////////////
 function play() {
+  nowPlaying = true;
+  playButton.value = 'arrow keys';
   if (current === board[0][0]) {
     played.push(current);
   }
@@ -265,46 +310,49 @@ function play() {
     let keyDirection = event.keyCode;
     let r = current.rowNumber;
     let c = current.columnNumber;
+    if (nowPlaying === true) {
 
-    if (!current.walls[0] && r - 1 >= 0 && (keyDirection == '38' || keyName === 'w')) {
-      // can move up
-      current.path = true;
-      current = board[r - 1][c];
-      win();
-    }
-    if (!current.walls[1] && c + 1 < column && (keyDirection == '39' || keyName === 'd')) {
-      // can move right
-      current.path = true;
-      current = board[r][c + 1];
-      win();
-    }
-    if (!current.walls[2] && r + 1 < row && (keyDirection == '40' || keyName === 's')) {
-      // can move down
-      current.path = true;
-      current = board[r + 1][c];
-      win();
-    }
-    if (!current.walls[3] && c - 1 >= 0 && (keyDirection == '37' || keyName === 'a')) {
-      // can move left
-      current.path = true;
-      current = board[r][c - 1];
-      win();
-    }
-    if (current === played[played.length - 2]) {
-      played[played.length - 1].path = false;
+      if (!current.walls[0] && r - 1 >= 0 && (keyDirection == '38' || keyName === 'w')) {
+        // can move up
+        current.path = true;
+        current = board[r - 1][c];
+        win();
+      }
+      if (!current.walls[1] && c + 1 < column && (keyDirection == '39' || keyName === 'd')) {
+        // can move right
+        current.path = true;
+        current = board[r][c + 1];
+        win();
+      }
+      if (!current.walls[2] && r + 1 < row && (keyDirection == '40' || keyName === 's')) {
+        // can move down
+        current.path = true;
+        current = board[r + 1][c];
+        win();
+      }
+      if (!current.walls[3] && c - 1 >= 0 && (keyDirection == '37' || keyName === 'a')) {
+        // can move left
+        current.path = true;
+        current = board[r][c - 1];
+        win();
+      }
+      if (current === played[played.length - 2]) {
+        played[played.length - 1].path = false;
+        startPlayedBuild();
+        played.pop();
+        played.pop();
+      }
+      if (current !== played[played.length - 1]) {
+        played.push(current);
+      }
       startPlayedBuild();
-      played.pop();
-      played.pop();
     }
-    if (current !== played[played.length - 1]) {
-      played.push(current);
-    }
-    startPlayedBuild();
   });
 }
 ////////////////////////////////start/////////////////////////////
 const start = () => {
   visitedCount = 0;
+  played = [];
   board = [];
   stack = [];
   size = document.querySelector('#size').value;
@@ -312,8 +360,13 @@ const start = () => {
   row = document.querySelector('#rows').value;
   border = document.querySelector('#border').value;
   fps = document.querySelector('#speed').value;
-  digging = document.getElementById("dig").onclick = dig;
-  playing = document.getElementById("play").onclick = play;
+  digButton = document.getElementById("dig")
+  digButton.onclick = dig;
+  playButton = document.getElementById("play")
+  playButton.onclick = play;
+  playBox = document.getElementById("playBox")
+  waitButton = document.getElementById("wait");
+  waitBox = document.getElementById("waitBox");
   canvas.width = size * column;
   canvas.height = size * row;
   setup();
@@ -321,8 +374,16 @@ const start = () => {
 }
 
 ////////////////////////////////load//////////////////////////////
+const checkFinish = () => {
+  if (current === board[0][0]) {
+    // fadeOut(waitBox);
+    waitBox.style.display = 'none'
+    fadeIn(playBox);
+    clearInterval(checkFinish);
+  }
+}
+setInterval(checkFinish, 1000);
 window.onLoad = start();
-
 // add speed range on display
 // fix play button
 // swap out the blocks to be wait or speed boost
